@@ -1,25 +1,48 @@
 #![allow(unused)]
 use std::io;
+use std::fmt;
 fn main() {
     let mut board = Board {current_player: Player::X, is_finished: false, board_content: [0; 9], winner: Player::NoPlayer};
     while !board.is_game_finished() {
-
-        let current_player = board.current_player_symbol();
-        println!("C'est au tour de {} de jouer!", current_player);
-        board.show_board_content();
-
+        {
+            let current_player = board.current_player_symbol();
+            println!("C'est au tour de {} de jouer!", current_player);
+            board.show_board_content();
+        }
+    
         let player_position = board.ask_position();
-        board.update_board_position(player_position);
-        board.evaluate_end();
-
-
-
-
-        board.change_current_player();
-
+    
+        {
+            board.update_board_position(player_position);
+            let end = board.evaluate_end();
+            if end {
+                let current_player = board.current_player_symbol();
+                println!("{} a gagné!!!", current_player);
+                break;
+            }
+            board.change_current_player();
+        }
     }
 }
 
+trait ContainsArr<T> {
+    fn contains_arr(&self, arr: &[T]) -> bool;
+}
+
+impl<T: PartialEq> ContainsArr<T> for Vec<T> {
+    fn contains_arr(&self, arr: &[T]) -> bool {
+        let arr_size = arr.len();
+
+        let mut count = 0;
+        for elem in arr.iter() {            
+            if self.contains(elem) { count += 1; };
+        }
+
+        (arr_size == count)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 enum Player {
     X,
     O,
@@ -50,7 +73,44 @@ impl Board {
 
     fn evaluate_end(&self) -> bool {
         // On ne regarde que les placements du joueur actuel (celui qui vient de jouer)
+        let player_positions: Vec<(i32, i32)> = self.player_positions(self.current_player);
+
+        if player_positions.len() < 3 { return false; }
+
+        for element in player_positions.iter() {
+            // on crée une combinaison gagnante verticale avec notre element
+            let vert_elem = [(0, element.1), (1, element.1), (2, element.1)];
+            let hori_elem = [(element.0, 0), (element.0, 1), (element.0, 2)];
+            let righ_diag = [(0, 0), (1, 1), (2, 2)];
+            let left_diag = [(2, 0), (1, 1), (0, 2)];
+
+            if player_positions.contains_arr(&vert_elem) { return true; break; }
+            if player_positions.contains_arr(&hori_elem) { return true; break; }
+            if player_positions.contains_arr(&righ_diag) { return true; break; }
+            if player_positions.contains_arr(&left_diag) { return true; break; }
+
+        }
+        
         false
+    }
+
+    fn player_positions(&self, player: Player) -> Vec<(i32, i32)> {
+        let mut positions: Vec<(i32, i32)> = vec![];
+        let current_player = self.current_player_value();
+
+        let mut i = 0;
+        for element in self.board_content.iter() {
+            if element != &current_player { i += 1; continue; }
+            else {
+                let x = i % 3;
+                let y = (i / 3) % 3;
+                positions.push((x, y));
+
+                i += 1;
+            };
+        };
+
+        positions
     }
 
     fn player_symbol(&self, value: &usize) ->  &str {
