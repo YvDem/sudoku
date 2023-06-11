@@ -1,56 +1,110 @@
 #![allow(unused)]
 use std::io;
 fn main() {
-    let position = ask_position();
-    println!("La position choisie est : {}", position);
+    let mut board = Board {current_player: Player::X, is_finished: false, board_content: [0; 9], winner: Player::NoPlayer};
+    while !board.is_game_finished() {
+        let current_player = board.current_player();
+        println!("C'est au tour de {} de jouer!", current_player);
+        let player_position = board.ask_position();
 
-    let my_board = Board {current_player: 0, is_finished: false, board_content: [0; 9]};
-    my_board.show_content()
+    }
+}
+
+enum Player {
+    X,
+    O,
+    NoPlayer
 }
 
 struct Board {
-    current_player: i8,
+    // Note: here 0 is empty, 1 is X and 2 is O
+    current_player: Player,
     is_finished: bool,
-    board_content: [i16; 9],
+    board_content: [usize; 9],
+    winner: Player,
 }
 
 impl Board {
-    fn show_content(&self) {
+    fn show_board_content(&self) {
         let mut i = 0;
-        println!("{}", self.board_content.iter()
+        println!("{}", self.board_content
+            .iter()
             .map(|n| { i += 1; 
                 if i % 3 != 0 { format!(" {} |", n)} 
                 else { format!(" {} \n", n)}
             })
             .fold(String::new(), |acc, arg| acc + arg.as_str()));
     }
-}
 
+    fn is_game_finished(&self) -> bool {
+        self.is_finished
+    }
 
-fn ask_position() -> u16 {
-    let board_position: u16 = loop {
-        let mut input = String::new();
+    fn is_position_empty(&self, pos: usize) -> bool {
+        let board_position = self.board_content[pos];
+        matches!(board_position, 0)
+    }
 
-        println!("Donnez la position à laquelle vous voulez jouer!");
+    fn update_board_position(&mut self, pos: usize) -> bool {
+        if !self.is_position_empty(pos) { false }
+        else {
+            self.board_content[pos] = self.current_player_value();
+            self.change_current_player();
+            true
+        }
+    }
 
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
+    fn change_current_player(&mut self) {
+        match self.current_player {
+            Player::X => { self.current_player = Player::O },
+            Player::O => { self.current_player = Player::X },
+            Player::NoPlayer => panic!("Il n'y a pas de joueur!")
+        }
+        
+    }
 
-        let int_position: u16 = match input.trim().parse() {
-            Ok(num @ 0..=8) => num,
-            Ok(_) => {
-                println!("Entrez une valeure valide (entre 0 et 8)");
-                continue;
-            }
-            Err(_) => {
-                println!("Entrez une valeure valide (entre 0 et 8)");
-                continue;
-            }
+    fn current_player_value(&self) -> usize {
+        match self.current_player {
+            Player::X => 1,
+            Player::O => 2,
+            Player::NoPlayer => 0
+        }
+    }
+
+    fn current_player(&self) -> &str {
+        match self.current_player {
+            Player::X => "X",
+            Player::O => "O",
+            Player::NoPlayer => panic!("Aucun joueur selectionné!")
+        }
+    }
+
+    fn ask_position(&self) -> usize {
+        let board_position: usize = loop {
+            let mut input = String::new();
+    
+            println!("Donnez la position à laquelle vous voulez jouer!");
+    
+            io::stdin()
+                .read_line(&mut input)
+                .expect("Failed to read line");
+    
+            let int_position: usize = match input.trim().parse() {
+                Ok(num @ 0..=8) => num,
+                Ok(_) => {
+                    println!("Entrez une valeure valide (entre 0 et 8)");
+                    continue;
+                }
+                Err(_) => {
+                    println!("Entrez une valeure valide (entre 0 et 8)");
+                    continue;
+                }
+            };
+    
+            break int_position;
         };
-
-        break int_position;
-    };
-
-    board_position
+    
+        board_position
+    }
+    
 }
