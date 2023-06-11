@@ -3,9 +3,19 @@ use std::io;
 fn main() {
     let mut board = Board {current_player: Player::X, is_finished: false, board_content: [0; 9], winner: Player::NoPlayer};
     while !board.is_game_finished() {
-        let current_player = board.current_player();
+
+        let current_player = board.current_player_symbol();
         println!("C'est au tour de {} de jouer!", current_player);
+        board.show_board_content();
+
         let player_position = board.ask_position();
+        board.update_board_position(player_position);
+        board.evaluate_end();
+
+
+
+
+        board.change_current_player();
 
     }
 }
@@ -27,13 +37,28 @@ struct Board {
 impl Board {
     fn show_board_content(&self) {
         let mut i = 0;
+        let mut s = " ";
+
         println!("{}", self.board_content
             .iter()
-            .map(|n| { i += 1; 
-                if i % 3 != 0 { format!(" {} |", n)} 
-                else { format!(" {} \n", n)}
+            .map(|n| { i += 1; s = self.player_symbol(n);
+                if i % 3 != 0 { format!(" {} |", s)} 
+                else { format!(" {} \n", s)}
             })
             .fold(String::new(), |acc, arg| acc + arg.as_str()));
+    }
+
+    fn evaluate_end(&self) -> bool {
+        // On ne regarde que les placements du joueur actuel (celui qui vient de jouer)
+        false
+    }
+
+    fn player_symbol(&self, value: &usize) ->  &str {
+        match value {
+            1 => "X",
+            2 => "O",
+            _ => " "
+        }
     }
 
     fn is_game_finished(&self) -> bool {
@@ -45,13 +70,8 @@ impl Board {
         matches!(board_position, 0)
     }
 
-    fn update_board_position(&mut self, pos: usize) -> bool {
-        if !self.is_position_empty(pos) { false }
-        else {
+    fn update_board_position(&mut self, pos: usize) {
             self.board_content[pos] = self.current_player_value();
-            self.change_current_player();
-            true
-        }
     }
 
     fn change_current_player(&mut self) {
@@ -71,7 +91,7 @@ impl Board {
         }
     }
 
-    fn current_player(&self) -> &str {
+    fn current_player_symbol(&self) -> &str {
         match self.current_player {
             Player::X => "X",
             Player::O => "O",
@@ -101,7 +121,11 @@ impl Board {
                 }
             };
     
-            break int_position;
+            if self.is_position_empty(int_position) { break int_position} 
+            else { 
+                println!("Cette position est déjà prise!");
+                continue; 
+            };
         };
     
         board_position
