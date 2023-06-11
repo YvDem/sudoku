@@ -1,9 +1,9 @@
-#![allow(unused)]
 use std::io;
-use std::fmt;
+
 fn main() {
-    let mut board = Board {current_player: Player::X, is_finished: false, board_content: [0; 9], winner: Player::NoPlayer};
-    while !board.is_game_finished() {
+    let mut board = Board {current_player: Player::X, board_content: [0; 9]};
+
+    loop {
         {
             let current_player = board.current_player_symbol();
             println!("C'est au tour de {} de jouer!", current_player);
@@ -38,23 +38,20 @@ impl<T: PartialEq> ContainsArr<T> for Vec<T> {
             if self.contains(elem) { count += 1; };
         }
 
-        (arr_size == count)
+        arr_size == count
     }
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Player {
     X,
-    O,
-    NoPlayer
+    O
 }
 
 struct Board {
     // Note: here 0 is empty, 1 is X and 2 is O
     current_player: Player,
-    is_finished: bool,
-    board_content: [usize; 9],
-    winner: Player,
+    board_content: [usize; 9]
 }
 
 impl Board {
@@ -73,7 +70,7 @@ impl Board {
 
     fn evaluate_end(&self) -> bool {
         // On ne regarde que les placements du joueur actuel (celui qui vient de jouer)
-        let player_positions: Vec<(i32, i32)> = self.player_positions(self.current_player);
+        let player_positions: Vec<(i32, i32)> = self.player_positions();
 
         if player_positions.len() < 3 { return false; }
 
@@ -84,17 +81,17 @@ impl Board {
             let righ_diag = [(0, 0), (1, 1), (2, 2)];
             let left_diag = [(2, 0), (1, 1), (0, 2)];
 
-            if player_positions.contains_arr(&vert_elem) { return true; break; }
-            if player_positions.contains_arr(&hori_elem) { return true; break; }
-            if player_positions.contains_arr(&righ_diag) { return true; break; }
-            if player_positions.contains_arr(&left_diag) { return true; break; }
+            if player_positions.contains_arr(&vert_elem) { return true; }
+            if player_positions.contains_arr(&hori_elem) { return true; }
+            if player_positions.contains_arr(&righ_diag) { return true; }
+            if player_positions.contains_arr(&left_diag) { return true; }
 
         }
         
         false
     }
 
-    fn player_positions(&self, player: Player) -> Vec<(i32, i32)> {
+    fn player_positions(&self) -> Vec<(i32, i32)> {
         let mut positions: Vec<(i32, i32)> = vec![];
         let current_player = self.current_player_value();
 
@@ -121,10 +118,6 @@ impl Board {
         }
     }
 
-    fn is_game_finished(&self) -> bool {
-        self.is_finished
-    }
-
     fn is_position_empty(&self, pos: usize) -> bool {
         let board_position = self.board_content[pos];
         matches!(board_position, 0)
@@ -137,8 +130,7 @@ impl Board {
     fn change_current_player(&mut self) {
         match self.current_player {
             Player::X => { self.current_player = Player::O },
-            Player::O => { self.current_player = Player::X },
-            Player::NoPlayer => panic!("Il n'y a pas de joueur!")
+            Player::O => { self.current_player = Player::X }
         }
         
     }
@@ -146,16 +138,14 @@ impl Board {
     fn current_player_value(&self) -> usize {
         match self.current_player {
             Player::X => 1,
-            Player::O => 2,
-            Player::NoPlayer => 0
+            Player::O => 2
         }
     }
 
     fn current_player_symbol(&self) -> &str {
         match self.current_player {
             Player::X => "X",
-            Player::O => "O",
-            Player::NoPlayer => panic!("Aucun joueur selectionné!")
+            Player::O => "O"
         }
     }
 
