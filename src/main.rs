@@ -14,9 +14,7 @@ fn main() {
         let player_position = board.ask_position();    
         board.update_board_position(player_position);
 
-
-        let end = board.evaluate_end();
-        if end {
+        if board.evaluate_end() {
             let current_player = board.current_player_symbol();
             board.show_board_content();
             println!("{} a gagné!!!", current_player);
