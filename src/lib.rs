@@ -30,6 +30,7 @@ pub struct Board {
     pub board_content: [usize; 9],
 }
 
+#[allow(dead_code)]
 impl Board {
     pub fn show_board_content(&self) {
         let mut s = " ";
@@ -146,75 +147,37 @@ impl Board {
         }
     }
 
-    fn parse_player_position(&self, pos: &str) -> usize {
-        // remplacer le contenu de int_position de la fonction en dessous
-    }
-
     pub fn ask_position(&self) -> usize {
         let board_position: usize = loop {
             let mut input = String::new();
 
-            println!("Donnez la position à laquelle vous voulez jouer! (ex: a1, 2b ..) :");
+            println!("Donnez la position à laquelle vous voulez jouer! (ex: a1, b2 ..) :");
 
             io::stdin()
                 .read_line(&mut input)
                 .expect("Failed to read line");
 
-            let int_position: usize = match input.trim() {
-                m if m.contains('a') => match m.replace('a', "").parse() {
-                    Ok(num @ 1..=3) => num - 1,
-                    _ => {
-                        println!("Entrez une valeure valide!");
-                        continue;
-                    }
-                },
-                m if m.contains('b') => match m.replace('b', "").parse() {
-                    Ok(num @ 1..=3) => 3 + num - 1,
-                    _ => {
-                        println!("Entrez une valeure valide!");
-                        continue;
-                    }
-                },
-                m if m.contains('c') => match m.replace('b', "").parse() {
-                    Ok(num @ 1..=3) => 6 + num - 1,
-                    _ => {
-                        println!("Entrez une valeure valide!");
-                        continue;
-                    }
-                },
-                _ => {
-                    println!("Entrez une valeure valide!");
-                    continue;
-                }
-            };
-
-            if self.is_position_empty(int_position) {
-                break int_position;
-            } else {
-                println!("Cette position est déjà prise!");
-                continue;
-            };
-
-            let int_position: usize = match input.trim().parse() {
-                Ok(num @ 0..=8) => num,
-                Ok(_) => {
-                    println!("Entrez une valeure valide (entre 0 et 8)");
-                    continue;
-                }
+            let int_position = match as_tuple(input.trim()) {
+                Ok(tuple) => tuple[1].into(),
                 Err(_) => {
-                    println!("Entrez une valeure valide (entre 0 et 8)");
+                    println!("Entrez une position valide!");
                     continue;
                 }
             };
 
-            if self.is_position_empty(int_position) {
-                break int_position;
-            } else {
-                println!("Cette position est déjà prise!");
-                continue;
-            };
+            break int_position;
         };
 
         board_position
     }
+}
+
+fn as_tuple(input: &str) -> Result<&[u8], &str> {
+    let bytes = input.as_bytes();
+
+    let result = match bytes {
+        &[b'a' | b'b' | b'c', i @ 1..=3] => std::result::Result::Ok(bytes),
+        _ => std::result::Result::Err("Not correct position"),
+    };
+    result
 }

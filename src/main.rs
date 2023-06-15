@@ -1,6 +1,5 @@
 use sudoku::Board;
 use sudoku::Player;
-
 fn main() {
     let mut board = Board {
         current_player: Player::X,
