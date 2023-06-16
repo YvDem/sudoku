@@ -1,10 +1,20 @@
 use std::io;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
     X,
     O,
     Empty,
+}
+
+impl Player {
+    pub fn symbol(&self) -> &str {
+        match &self {
+            Player::X => "X",
+            Player::O => "O",
+            Player::Empty => " ",
+        }
+    }
 }
 
 trait ContainsArr<T> {
@@ -27,9 +37,8 @@ impl<T: PartialEq> ContainsArr<T> for Vec<T> {
 }
 
 pub struct Board {
-    // Note: here 0 is empty, 1 is X and 2 is O
     pub current_player: Player,
-    pub board_content: [usize; 9],
+    pub board_content: [Player; 9],
     pub winner: Player,
 }
 
@@ -37,7 +46,7 @@ impl Default for Board {
     fn default() -> Board {
         Board {
             current_player: Player::X,
-            board_content: [0; 9],
+            board_content: [Player::Empty; 9],
             winner: Player::Empty,
         }
     }
@@ -45,7 +54,6 @@ impl Default for Board {
 
 impl Board {
     pub fn show_board_content(&self) {
-        let mut s = " ";
         let rows = ["a", "b", "c"];
 
         println!(
@@ -54,11 +62,10 @@ impl Board {
                 .iter()
                 .enumerate()
                 .map(|(i, n)| {
-                    s = self.player_symbol(n);
                     match i % 3 {
-                        0 => format!("{} {} |", rows[i / 3], s),
-                        2 => format!(" {} \n", s),
-                        1 => format!(" {} |", s),
+                        0 => format!("{} {} |", rows[i / 3], n.symbol()),
+                        2 => format!(" {} \n", n.symbol()),
+                        1 => format!(" {} |", n.symbol()),
                         _ => panic!("show_board_content: seems like x % 3 > 2"),
                     }
                 })
@@ -114,73 +121,42 @@ impl Board {
     }
 
     fn is_board_full(&self) -> bool {
-        for element in self.board_content.iter() {
-            if element == &0 {
-                return false;
-            }
-        }
-
-        true
+        !self.board_content.contains(&Player::Empty)
     }
 
     pub fn player_positions(&self) -> Vec<(i32, i32)> {
         let mut positions: Vec<(i32, i32)> = vec![];
-        let current_player = self.current_player_value();
 
         let mut i = 0;
         for element in self.board_content.iter() {
-            if element != &current_player {
-                i += 1;
-                continue;
-            } else {
-                let x = i % 3;
-                let y = (i / 3) % 3;
-                positions.push((x, y));
-
-                i += 1;
-            };
+            match element {
+                e if e == &self.current_player => {
+                    positions.push((i % 3, (i / 3) % 3));
+                    i += 1;
+                }
+                _ => {
+                    i += 1;
+                    continue;
+                }
+            }
         }
 
         positions
     }
 
-    pub fn player_symbol(&self, value: &usize) -> &str {
-        match value {
-            1 => "X",
-            2 => "O",
-            _ => " ",
-        }
-    }
-
     fn is_position_empty(&self, pos: usize) -> bool {
         let board_position = self.board_content[pos];
-        matches!(board_position, 0)
+        board_position == Player::Empty
     }
 
     pub fn update_board_position(&mut self, pos: usize) {
-        self.board_content[pos] = self.current_player_value();
+        self.board_content[pos] = self.current_player;
     }
 
     pub fn change_current_player(&mut self) {
         match self.current_player {
             Player::X => self.current_player = Player::O,
             Player::O => self.current_player = Player::X,
-            _ => panic!("How did we get here ?"),
-        }
-    }
-
-    pub fn current_player_value(&self) -> usize {
-        match self.current_player {
-            Player::X => 1,
-            Player::O => 2,
-            Player::Empty => 0,
-        }
-    }
-
-    pub fn current_player_symbol(&self) -> &str {
-        match self.current_player {
-            Player::X => "X",
-            Player::O => "O",
             _ => panic!("How did we get here ?"),
         }
     }

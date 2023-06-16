@@ -4,7 +4,7 @@ fn main() {
     let mut board = Board::default();
 
     loop {
-        let current_player = board.current_player_symbol();
+        let current_player = board.current_player.symbol();
         println!("C'est au tour de {} de jouer!", current_player);
 
         board.show_board_content();
@@ -19,7 +19,7 @@ fn main() {
             match board.get_winner() {
                 Player::Empty => println!("Match nul !"),
                 Player::O => println!("O à gagné !"),
-                Player::X => println!("O à gagné !"),
+                Player::X => println!("X à gagné !"),
             }
             break;
         }
