@@ -6,6 +6,7 @@ fn main() {
     loop {
         let current_player = board.current_player_symbol();
         println!("C'est au tour de {} de jouer!", current_player);
+
         board.show_board_content();
 
         let player_position = board.ask_position();
