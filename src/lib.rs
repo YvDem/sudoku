@@ -1,8 +1,10 @@
 use std::io;
 
+#[derive(Debug, Copy, Clone)]
 pub enum Player {
     X,
     O,
+    Empty,
 }
 
 trait ContainsArr<T> {
@@ -28,9 +30,19 @@ pub struct Board {
     // Note: here 0 is empty, 1 is X and 2 is O
     pub current_player: Player,
     pub board_content: [usize; 9],
+    pub winner: Player,
 }
 
-#[allow(dead_code)]
+impl Default for Board {
+    fn default() -> Board {
+        Board {
+            current_player: Player::X,
+            board_content: [0; 9],
+            winner: Player::Empty,
+        }
+    }
+}
+
 impl Board {
     pub fn show_board_content(&self) {
         let mut s = " ";
@@ -54,8 +66,17 @@ impl Board {
         );
     }
 
-    pub fn evaluate_end(&self) -> bool {
+    pub fn get_winner(&self) -> &Player {
+        &self.winner
+    }
+
+    pub fn evaluate_end(&mut self) -> bool {
         // On ne regarde que les placements du joueur actuel (celui qui vient de jouer)
+
+        if self.is_board_full() {
+            return true;
+        }
+
         let player_positions: Vec<(i32, i32)> = self.player_positions();
 
         if player_positions.len() < 3 {
@@ -66,26 +87,40 @@ impl Board {
             // on crée une combinaison gagnante verticale avec notre element
             let vert_elem = [(0, element.1), (1, element.1), (2, element.1)];
             if player_positions.contains_arr(&vert_elem) {
+                self.winner = self.current_player;
                 return true;
             }
 
             let hori_elem = [(element.0, 0), (element.0, 1), (element.0, 2)];
             if player_positions.contains_arr(&hori_elem) {
+                self.winner = self.current_player;
                 return true;
             }
 
             let righ_diag = [(0, 0), (1, 1), (2, 2)];
             if player_positions.contains_arr(&righ_diag) {
+                self.winner = self.current_player;
                 return true;
             }
 
             let left_diag = [(2, 0), (1, 1), (0, 2)];
             if player_positions.contains_arr(&left_diag) {
+                self.winner = self.current_player;
                 return true;
             }
         }
 
         false
+    }
+
+    fn is_board_full(&self) -> bool {
+        for element in self.board_content.iter() {
+            if element == &0 {
+                return false;
+            }
+        }
+
+        true
     }
 
     pub fn player_positions(&self) -> Vec<(i32, i32)> {
@@ -130,6 +165,7 @@ impl Board {
         match self.current_player {
             Player::X => self.current_player = Player::O,
             Player::O => self.current_player = Player::X,
+            _ => panic!("How did we get here ?"),
         }
     }
 
@@ -137,6 +173,7 @@ impl Board {
         match self.current_player {
             Player::X => 1,
             Player::O => 2,
+            Player::Empty => 0,
         }
     }
 
@@ -144,11 +181,12 @@ impl Board {
         match self.current_player {
             Player::X => "X",
             Player::O => "O",
+            _ => panic!("How did we get here ?"),
         }
     }
 
     pub fn ask_position(&self) -> usize {
-        let board_position: usize = loop {
+        let board_position: u32 = loop {
             let mut input = String::new();
 
             println!("Donnez la position à laquelle vous voulez jouer! (ex: a1, b2 ..) :");
@@ -157,27 +195,33 @@ impl Board {
                 .read_line(&mut input)
                 .expect("Failed to read line");
 
-            let int_position = match as_tuple(input.trim()) {
-                Ok(tuple) => tuple[1].into(),
-                Err(_) => {
+            let int_position = match (
+                input.trim().chars().nth(0).unwrap(),
+                input.trim().chars().nth(1),
+            ) {
+                (.., None) => {
+                    println!("Entrez une position valide!");
+                    continue;
+                }
+
+                ('a', x @ Some('1' | '2' | '3')) => x.unwrap().to_digit(10).unwrap() + 0 - 1,
+                ('b', x @ Some('1' | '2' | '3')) => x.unwrap().to_digit(10).unwrap() + 3 - 1,
+                ('c', x @ Some('1' | '2' | '3')) => x.unwrap().to_digit(10).unwrap() + 6 - 1,
+
+                _ => {
                     println!("Entrez une position valide!");
                     continue;
                 }
             };
 
-            break int_position;
+            if self.is_position_empty(int_position as usize) {
+                break int_position;
+            } else {
+                println!("Entrez une position valide!");
+                continue;
+            }
         };
 
-        board_position
+        board_position as usize
     }
-}
-
-fn as_tuple(input: &str) -> Result<&[u8], &str> {
-    let bytes = input.as_bytes();
-
-    let result = match bytes {
-        &[b'a' | b'b' | b'c', i @ 1..=3] => std::result::Result::Ok(bytes),
-        _ => std::result::Result::Err("Not correct position"),
-    };
-    result
 }

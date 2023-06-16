@@ -1,10 +1,7 @@
 use sudoku::Board;
 use sudoku::Player;
 fn main() {
-    let mut board = Board {
-        current_player: Player::X,
-        board_content: [0; 9],
-    };
+    let mut board = Board::default();
 
     loop {
         let current_player = board.current_player_symbol();
@@ -16,9 +13,13 @@ fn main() {
 
         let end = board.evaluate_end();
         if end {
-            let current_player = board.current_player_symbol();
             board.show_board_content();
-            println!("{} a gagné!!!", current_player);
+
+            match board.get_winner() {
+                Player::Empty => println!("Match nul !"),
+                Player::O => println!("O à gagné !"),
+                Player::X => println!("O à gagné !"),
+            }
             break;
         }
         board.change_current_player();
