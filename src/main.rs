@@ -9,6 +9,9 @@ fn main() {
 
         board.show_board_content();
 
+        let best_move = "Ne pas jouer";
+        println!("Notre IA vous conseille de jouer: {}", best_move);
+
         let player_position = board.ask_position();
         board.update_board_position(player_position);
 

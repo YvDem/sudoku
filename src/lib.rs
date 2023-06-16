@@ -17,6 +17,17 @@ impl Player {
     }
 }
 
+pub struct Tree {
+    pub value: usize,
+    pub sub_trees: Vec<Tree>,
+}
+
+impl Tree {
+    pub fn add_subtree(&self) {
+        // yolo
+    }
+}
+
 trait ContainsArr<T> {
     fn contains_arr(&self, arr: &[T]) -> bool;
 }
