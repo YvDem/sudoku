@@ -8,7 +8,11 @@ fn main() {
         println!("C'est au tour de {} de jouer!", current_player);
         board.show_board_content();
 
-        if board.evaluate_end() {
+        let player_position = board.ask_position();
+        board.update_board_position(player_position);
+
+        let end = board.evaluate_end();
+        if end {
             board.show_board_content();
 
             match board.get_winner() {
