@@ -17,17 +17,6 @@ impl Player {
     }
 }
 
-pub struct Tree {
-    pub value: usize,
-    pub sub_trees: Vec<Tree>,
-}
-
-impl Tree {
-    pub fn add_subtree(&self) {
-        // yolo
-    }
-}
-
 trait ContainsArr<T> {
     fn contains_arr(&self, arr: &[T]) -> bool;
 }
@@ -47,6 +36,7 @@ impl<T: PartialEq> ContainsArr<T> for Vec<T> {
     }
 }
 
+#[derive(Clone)]
 pub struct Board {
     pub current_player: Player,
     pub board_content: [Player; 9],
@@ -136,23 +126,27 @@ impl Board {
     }
 
     pub fn player_positions(&self) -> Vec<(i32, i32)> {
-        let mut positions: Vec<(i32, i32)> = vec![];
-
-        let mut i = 0;
-        for element in self.board_content.iter() {
-            match element {
-                e if e == &self.current_player => {
-                    positions.push((i % 3, (i / 3) % 3));
-                    i += 1;
+        self.board_content
+            .iter()
+            .enumerate()
+            .map(|(i, p)| {
+                if p == &self.current_player {
+                    ((i % 3) as i32, ((i / 3) % 3) as i32)
+                } else {
+                    (4, 4)
                 }
-                _ => {
-                    i += 1;
-                    continue;
-                }
-            }
-        }
+            })
+            .filter(|e| e != &(4 as i32, 4 as i32))
+            .collect()
+    }
 
-        positions
+    pub fn empty_positions(&self) -> Vec<usize> {
+        self.board_content
+            .iter()
+            .enumerate()
+            .map(|(i, p)| if p == &Player::Empty { i } else { 10 })
+            .filter(|e| e < &10)
+            .collect()
     }
 
     fn is_position_empty(&self, pos: usize) -> bool {
