@@ -1,4 +1,4 @@
-use std::io;
+use std::{fmt, io};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
@@ -38,28 +38,41 @@ impl<T: PartialEq> ContainsArr<T> for Vec<T> {
 
 #[derive(Clone)]
 pub struct Board {
+    pub content: [Player; 9],
+}
+
+#[derive(Clone)]
+pub struct Game {
     pub current_player: Player,
-    pub board_content: [Player; 9],
+    pub board_content: Board,
     pub winner: Player,
 }
 
 impl Default for Board {
     fn default() -> Board {
         Board {
+            content: [Player::Empty; 9],
+        }
+    }
+}
+
+impl Default for Game {
+    fn default() -> Game {
+        Game {
             current_player: Player::X,
-            board_content: [Player::Empty; 9],
+            board_content: Board::default(),
             winner: Player::Empty,
         }
     }
 }
 
-impl Board {
-    pub fn show_board_content(&self) {
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let rows = ["a", "b", "c"];
-
-        println!(
+        write!(
+            f,
             "  1 | 2 | 3 \n{}",
-            self.board_content
+            self.content
                 .iter()
                 .enumerate()
                 .map(|(i, n)| {
@@ -71,7 +84,30 @@ impl Board {
                     }
                 })
                 .fold(String::new(), |acc, arg| acc + arg.as_str())
-        );
+        )
+    }
+}
+
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.symbol())
+    }
+}
+
+impl fmt::Display for Game {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "(current player: {} \n Content: {})",
+            self.current_player, self.board_content
+        )
+    }
+}
+
+impl Game {
+    // Todo: impl tous les elements liées à Board dans le impl de board
+    pub fn board_content(&self) -> &Board {
+        &self.board_content
     }
 
     pub fn get_winner(&self) -> &Player {
@@ -122,11 +158,12 @@ impl Board {
     }
 
     fn is_board_full(&self) -> bool {
-        !self.board_content.contains(&Player::Empty)
+        !self.board_content.content.contains(&Player::Empty)
     }
 
     pub fn player_positions(&self) -> Vec<(i32, i32)> {
         self.board_content
+            .content
             .iter()
             .enumerate()
             .map(|(i, p)| {
@@ -142,6 +179,7 @@ impl Board {
 
     pub fn empty_positions(&self) -> Vec<usize> {
         self.board_content
+            .content
             .iter()
             .enumerate()
             .map(|(i, p)| if p == &Player::Empty { i } else { 10 })
@@ -150,12 +188,12 @@ impl Board {
     }
 
     fn is_position_empty(&self, pos: usize) -> bool {
-        let board_position = self.board_content[pos];
+        let board_position = self.board_content.content[pos];
         board_position == Player::Empty
     }
 
     pub fn update_board_position(&mut self, pos: usize) {
-        self.board_content[pos] = self.current_player;
+        self.board_content.content[pos] = self.current_player;
     }
 
     pub fn change_current_player(&mut self) {

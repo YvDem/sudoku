@@ -11,5 +11,5 @@ dependencies = [
 
 [[package]]
 name = "trees"
-version = "0.1.2"
-source = "git+https://github.com/YvDem/rust_tree_impl#000d6edc9b9220f794a175238314d22c409d3a23"
+version = "0.1.21"
+source = "git+https://github.com/YvDem/rust_tree_impl#3de452ef7b1a147e3c9e06e764bc84012e0937e2"

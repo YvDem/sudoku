@@ -1,14 +1,14 @@
-use sudoku::Board;
+use sudoku::Game;
 use sudoku::Player;
 
 fn main() {
-    let mut board = Board::default();
+    let mut board = Game::default();
 
     loop {
         let current_player = board.current_player.symbol();
         println!("C'est au tour de {} de jouer!", current_player);
 
-        board.show_board_content();
+        println!("{}", board.board_content());
 
         let best_move = "Ne pas jouer";
         println!("Notre IA vous conseille de jouer: {}", best_move);
@@ -18,7 +18,7 @@ fn main() {
 
         let end = board.evaluate_end();
         if end {
-            board.show_board_content();
+            println!("{}", board.board_content());
 
             match board.get_winner() {
                 Player::Empty => println!("Match nul !"),
