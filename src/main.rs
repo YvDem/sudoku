@@ -8,7 +8,7 @@ fn main() {
         let current_player = board.current_player.symbol();
         println!("C'est au tour de {} de jouer!", current_player);
 
-        println!("{}", board.board_content());
+        println!("{}", board.bcontent());
 
         let best_move = "Ne pas jouer";
         println!("Notre IA vous conseille de jouer: {}", best_move);
@@ -18,9 +18,9 @@ fn main() {
 
         let end = board.evaluate_end();
         if end {
-            println!("{}", board.board_content());
+            println!("{}", board.bcontent());
 
-            match board.get_winner() {
+            match board.winner() {
                 Player::Empty => println!("Match nul !"),
                 Player::O => println!("O à gagné !"),
                 Player::X => println!("X à gagné !"),

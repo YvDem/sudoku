@@ -1,4 +1,4 @@
-use std::{fmt, io};
+use std::{fmt, io, num};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
@@ -17,22 +17,43 @@ impl Player {
     }
 }
 
-trait ContainsArr<T> {
-    fn contains_arr(&self, arr: &[T]) -> bool;
+trait Contains<T> {
+    fn contains_elems(&self, arr: &[T]) -> bool;
 }
 
-impl<T: PartialEq> ContainsArr<T> for Vec<T> {
-    fn contains_arr(&self, arr: &[T]) -> bool {
+impl<T: PartialEq> Contains<T> for Vec<T> {
+    fn contains_elems(&self, arr: &[T]) -> bool {
         let arr_size = arr.len();
+        let count: Vec<&T> = arr.iter().filter(|e| self.contains(e)).collect();
 
-        let mut count = 0;
-        for elem in arr.iter() {
-            if self.contains(elem) {
-                count += 1;
-            };
+        count.len() == arr_size
+    }
+}
+
+trait Wcomb {
+    fn wcomb(self, size: i32) -> Vec<Vec<i32>>;
+}
+
+impl Wcomb for i32 {
+    fn wcomb(self, len: i32) -> Vec<Vec<i32>> {
+        let size = (len as f32).sqrt() as i32;
+        let offset = self % size;
+        let layer = self / size;
+
+        let mut result = vec![
+            (self - offset..(layer + 1) * size).collect::<Vec<_>>(),
+            (self - layer * size..len).step_by(size as usize).collect(),
+        ];
+
+        if self % (size + 1) == 0 {
+            result.push(
+                (self - (layer * (size + 1))..len)
+                    .step_by(size as usize)
+                    .collect(),
+            );
         }
 
-        arr_size == count
+        result
     }
 }
 
@@ -104,61 +125,52 @@ impl fmt::Display for Game {
     }
 }
 
+impl Board {
+    fn is_full(&self) -> bool {
+        !self.content.contains(&Player::Empty)
+    }
+
+    fn positions(&self, player: &Player) -> Vec<i32> {
+        self.content
+            .iter()
+            .enumerate()
+            .map(|(i, p)| if p == player { i as i32 } else { 10 })
+            .filter(|e| e != &(10 as i32))
+            .collect()
+    }
+
+    pub fn eval_winner(&self, player: &Player) -> Option<Player> {
+        let pl_pos: Vec<i32> = self.positions(player);
+
+        if pl_pos.len() < 3 {
+            return None;
+        }
+
+        for pos in pl_pos.iter() {
+            for comb in pos.wcomb(9) {
+                if pl_pos.contains_elems(&comb) {
+                    return Some(*player);
+                }
+            }
+        }
+
+        None
+    }
+}
+
 impl Game {
     // Todo: impl tous les elements liées à Board dans le impl de board
-    pub fn board_content(&self) -> &Board {
+    pub fn bcontent(&self) -> &Board {
         &self.board_content
     }
 
-    pub fn get_winner(&self) -> &Player {
+    pub fn winner(&self) -> &Player {
         &self.winner
     }
 
     pub fn evaluate_end(&mut self) -> bool {
-        // On ne regarde que les placements du joueur actuel (celui qui vient de jouer)
-
-        if self.is_board_full() {
-            return true;
-        }
-
-        let player_positions: Vec<(i32, i32)> = self.player_positions();
-
-        if player_positions.len() < 3 {
-            return false;
-        }
-
-        for element in player_positions.iter() {
-            // on crée une combinaison gagnante verticale avec notre element
-            let vert_elem = [(0, element.1), (1, element.1), (2, element.1)];
-            if player_positions.contains_arr(&vert_elem) {
-                self.winner = self.current_player;
-                return true;
-            }
-
-            let hori_elem = [(element.0, 0), (element.0, 1), (element.0, 2)];
-            if player_positions.contains_arr(&hori_elem) {
-                self.winner = self.current_player;
-                return true;
-            }
-
-            let righ_diag = [(0, 0), (1, 1), (2, 2)];
-            if player_positions.contains_arr(&righ_diag) {
-                self.winner = self.current_player;
-                return true;
-            }
-
-            let left_diag = [(2, 0), (1, 1), (0, 2)];
-            if player_positions.contains_arr(&left_diag) {
-                self.winner = self.current_player;
-                return true;
-            }
-        }
-
+        // a mettre à jour
         false
-    }
-
-    fn is_board_full(&self) -> bool {
-        !self.board_content.content.contains(&Player::Empty)
     }
 
     pub fn player_positions(&self) -> Vec<(i32, i32)> {
