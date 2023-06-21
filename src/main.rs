@@ -15,9 +15,9 @@ fn main() {
 
         let player_position = board.ask_position();
         board.update_board_position(player_position);
+        board.eval_end();
 
-        let end = board.evaluate_end();
-        if end {
+        if board.closed() {
             println!("{}", board.bcontent());
 
             match board.winner() {

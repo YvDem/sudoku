@@ -1,4 +1,4 @@
-use std::{fmt, io, num};
+use std::{fmt, io};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
@@ -22,6 +22,7 @@ trait Contains<T> {
 }
 
 impl<T: PartialEq> Contains<T> for Vec<T> {
+    // ne doit etre utilisé que sur des types ne containant pas d'éléments en double
     fn contains_elems(&self, arr: &[T]) -> bool {
         let arr_size = arr.len();
         let count: Vec<&T> = arr.iter().filter(|e| self.contains(e)).collect();
@@ -48,7 +49,7 @@ impl Wcomb for i32 {
         if self % (size + 1) == 0 {
             result.push(
                 (self - (layer * (size + 1))..len)
-                    .step_by(size as usize)
+                    .step_by((size + 1) as usize)
                     .collect(),
             );
         }
@@ -67,6 +68,7 @@ pub struct Game {
     pub current_player: Player,
     pub board_content: Board,
     pub winner: Player,
+    pub closed: bool,
 }
 
 impl Default for Board {
@@ -83,6 +85,7 @@ impl Default for Game {
             current_player: Player::X,
             board_content: Board::default(),
             winner: Player::Empty,
+            closed: false,
         }
     }
 }
@@ -130,16 +133,16 @@ impl Board {
         !self.content.contains(&Player::Empty)
     }
 
-    fn positions(&self, player: &Player) -> Vec<i32> {
+    fn positions(&self, player: Player) -> Vec<i32> {
         self.content
             .iter()
             .enumerate()
-            .map(|(i, p)| if p == player { i as i32 } else { 10 })
+            .map(|(i, p)| if p == &player { i as i32 } else { 10 })
             .filter(|e| e != &(10 as i32))
             .collect()
     }
 
-    pub fn eval_winner(&self, player: &Player) -> Option<Player> {
+    pub fn eval_winner(&self, player: Player) -> Option<Player> {
         let pl_pos: Vec<i32> = self.positions(player);
 
         if pl_pos.len() < 3 {
@@ -149,12 +152,25 @@ impl Board {
         for pos in pl_pos.iter() {
             for comb in pos.wcomb(9) {
                 if pl_pos.contains_elems(&comb) {
-                    return Some(*player);
+                    return Some(player);
                 }
             }
         }
 
+        if self.is_full() {
+            return Some(Player::Empty);
+        }
+
         None
+    }
+
+    pub fn empty_positions(&self) -> Vec<usize> {
+        self.content
+            .iter()
+            .enumerate()
+            .map(|(i, p)| if p == &Player::Empty { i } else { 10 })
+            .filter(|e| e < &10)
+            .collect()
     }
 }
 
@@ -164,39 +180,22 @@ impl Game {
         &self.board_content
     }
 
-    pub fn winner(&self) -> &Player {
-        &self.winner
+    pub fn winner(&self) -> Player {
+        self.winner
     }
 
-    pub fn evaluate_end(&mut self) -> bool {
-        // a mettre à jour
-        false
+    pub fn closed(&self) -> bool {
+        self.closed
     }
 
-    pub fn player_positions(&self) -> Vec<(i32, i32)> {
-        self.board_content
-            .content
-            .iter()
-            .enumerate()
-            .map(|(i, p)| {
-                if p == &self.current_player {
-                    ((i % 3) as i32, ((i / 3) % 3) as i32)
-                } else {
-                    (4, 4)
-                }
-            })
-            .filter(|e| e != &(4 as i32, 4 as i32))
-            .collect()
-    }
-
-    pub fn empty_positions(&self) -> Vec<usize> {
-        self.board_content
-            .content
-            .iter()
-            .enumerate()
-            .map(|(i, p)| if p == &Player::Empty { i } else { 10 })
-            .filter(|e| e < &10)
-            .collect()
+    pub fn eval_end(&mut self) {
+        match self.board_content.eval_winner(self.current_player) {
+            Some(player) => {
+                self.winner = player;
+                self.closed = true;
+            }
+            None => (),
+        }
     }
 
     fn is_position_empty(&self, pos: usize) -> bool {
