@@ -14,8 +14,7 @@ fn main() {
         println!("Notre IA vous conseille de jouer: {}", best_move);
 
         let player_position = board.ask_position();
-        board.update_board_position(player_position);
-        board.eval_end();
+        board.update_board(player_position);
 
         if board.closed() {
             println!("{}", board.bcontent());
@@ -27,6 +26,5 @@ fn main() {
             }
             break;
         }
-        board.change_current_player();
     }
 }

@@ -15,6 +15,14 @@ impl Player {
             Player::Empty => " ",
         }
     }
+
+    pub fn swap(&self) -> Player {
+        match self {
+            Player::X => Player::O,
+            Player::O => Player::X,
+            Player::Empty => Player::Empty,
+        }
+    }
 }
 
 trait Contains<T> {
@@ -180,6 +188,10 @@ impl Game {
         &self.board_content
     }
 
+    pub fn c_player(&self) -> Player {
+        self.current_player
+    }
+
     pub fn winner(&self) -> Player {
         self.winner
     }
@@ -203,8 +215,10 @@ impl Game {
         board_position == Player::Empty
     }
 
-    pub fn update_board_position(&mut self, pos: usize) {
+    pub fn update_board(&mut self, pos: usize) {
         self.board_content.content[pos] = self.current_player;
+        self.eval_end();
+        self.change_current_player();
     }
 
     pub fn change_current_player(&mut self) {
