@@ -4,49 +4,71 @@ use sudoku::{Board, Game, Player};
 use trees::{Init, Node};
 
 fn main() {
-    let mut b_tree = Node::init((0, Game::default(), 0));
-    create_all_possibilites_r(&mut b_tree, Player::X);
+    let mut b_tree = Node::init(Game {
+        current_player: Player::X,
+        board_content: Board {
+            content: [
+                Player::X,
+                Player::X,
+                Player::Empty,
+                Player::O,
+                Player::O,
+                Player::Empty,
+                Player::Empty,
+                Player::Empty,
+                Player::Empty,
+            ],
+        },
+        winner: Player::Empty,
+        closed: false,
+    });
+
+    create_all_possibilites_r(&mut b_tree);
     println!("size: {}", b_tree.size(-1));
-    print!("minimax: {}\n", minimax(&b_tree, Player::X));
+    print!("minimax: {}\n", minimax_r(&mut b_tree, 9, Player::X));
+
+    for snode in b_tree.mut_snodes() {
+        println!("minimax of snode :{}", minimax_r(snode, 9, Player::X))
+    }
+
     show_possibilities(&b_tree);
 }
 
-fn create_all_possibilites_r(node: &mut Node<(i32, Game, i32)>, player: Player) {
-    if node.value().1.closed() {
-        match node.value().1.winner() {
-            Player::Empty => node.value.0 = 0,
-            e if e == player => node.value.0 = 10 - node.value().2,
-            _ => node.value.0 = 10 - node.value().2,
-        }
+fn create_all_possibilites_r(node: &mut Node<Game>) {
+    if node.value().closed() {
         return;
     }
 
-    for pos in node.value().1.bcontent().empty_positions() {
-        let mut sboard = node.value().1.clone();
+    for pos in node.value().bcontent().empty_positions() {
+        let mut sboard = node.value().clone();
         sboard.update_board(pos);
 
-        let mut snode = trees::Node::init((node.value().0, sboard, node.value().2 + 1));
-        create_all_possibilites_r(&mut snode, player);
+        let mut snode = trees::Node::init(sboard);
+        create_all_possibilites_r(&mut snode);
         node.add_snode(snode);
     }
 }
 
-#[allow(dead_code)]
-fn minimax(node: &Node<(i32, Game, i32)>, player: Player) -> i32 {
-    if node.value().1.closed() {
-        return node.value().0;
+fn minimax_r(node: &mut Node<Game>, depth: i32, max_player: Player) -> i32 {
+    if node.value().closed() || depth == 0 {
+        let value = match node.value().winner() {
+            Player::Empty => 0,
+            e if e == max_player => 1,
+            _ => -1,
+        };
+        return value;
     }
 
     let mut value = -9000;
-    if node.value().1.c_player() != player {
-        for snode in node.snodes() {
-            let b_value = minimax(snode, player.swap());
+    if node.value().c_player() == max_player {
+        for snode in node.mut_snodes() {
+            let b_value = minimax_r(snode, depth - 1, max_player);
             value = if b_value > value { b_value } else { value }
         }
     } else {
         value = 9000;
-        for snode in node.snodes() {
-            let b_value = minimax(snode, player.swap());
+        for snode in node.mut_snodes() {
+            let b_value = minimax_r(snode, depth - 1, max_player);
             value = if b_value > value { value } else { b_value }
         }
     }
@@ -55,30 +77,30 @@ fn minimax(node: &Node<(i32, Game, i32)>, player: Player) -> i32 {
 }
 
 trait GetNodeScore {
-    fn snodes_scores(&self) -> Vec<i32>;
+    fn snodes_boards(&self) -> Vec<&Board>;
 }
 
-impl GetNodeScore for Node<(i32, Game, i32)> {
-    fn snodes_scores(&self) -> Vec<i32> {
+impl GetNodeScore for Node<Game> {
+    fn snodes_boards(&self) -> Vec<&Board> {
         self.snodes_values()
             .iter()
-            .map(|v: &&(i32, Game, i32)| v.0)
-            .collect()
+            .map(|v: &&Game| v.bcontent())
+            .fold(Vec::new(), |mut acc, elem| {
+                acc.push(elem);
+                acc
+            })
     }
 }
 
-fn show_possibilities(node: &Node<(i32, Game, i32)>) {
-    println!("Current Node:\n{}", node.value().1.bcontent());
-    println!(
-        "Sub-nodes: {}, values {:?}",
-        node.size(0),
-        node.snodes_scores()
-    );
+#[allow(dead_code)]
+fn show_possibilities(node: &Node<Game>) {
+    println!("Current Node:\n{}", node.value().bcontent());
+    println!("Sub-nodes: {}", node.size(0),);
 
     let cmd: u32 = loop {
         let mut input = String::new();
 
-        println!("1..n -> choisir une nth node\n 0 -> exit");
+        println!("1..n -> choisir une nth node\n 0 -> affiche toutes les snodes");
 
         io::stdin()
             .read_line(&mut input)
@@ -93,7 +115,10 @@ fn show_possibilities(node: &Node<(i32, Game, i32)>) {
     };
 
     match cmd {
-        0 => return,
+        0 => {
+            println!("{:?}", node.snodes_boards());
+            return show_possibilities(node);
+        }
         cmd if cmd <= node.size(0) as u32 => show_possibilities(node.snode_at((cmd - 1) as usize)),
         _ => return,
     }

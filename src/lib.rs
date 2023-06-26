@@ -62,6 +62,14 @@ impl Wcomb for i32 {
             );
         }
 
+        if self % (size - 1) == 0 {
+            result.push(
+                (self - (layer * (size - 1))..len)
+                    .step_by((size - 1) as usize)
+                    .filter(|e| e < &8)
+                    .collect(),
+            );
+        }
         result
     }
 }
@@ -132,6 +140,28 @@ impl fmt::Display for Game {
             f,
             "(current player: {} \n Content: {})",
             self.current_player, self.board_content
+        )
+    }
+}
+
+impl fmt::Debug for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let rows = ["a", "b", "c"];
+        write!(
+            f,
+            "  1 | 2 | 3 \n{}\n",
+            self.content
+                .iter()
+                .enumerate()
+                .map(|(i, n)| {
+                    match i % 3 {
+                        0 => format!("{} {} |", rows[i / 3], n.symbol()),
+                        2 => format!(" {} \n", n.symbol()),
+                        1 => format!(" {} |", n.symbol()),
+                        _ => panic!("show_board_content: seems like x % 3 > 2"),
+                    }
+                })
+                .fold(String::new(), |acc, arg| acc + arg.as_str())
         )
     }
 }
