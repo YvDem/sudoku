@@ -111,7 +111,7 @@ impl fmt::Display for Board {
         let rows = ["a", "b", "c"];
         write!(
             f,
-            "  1 | 2 | 3 \n",
+            "  1 | 2 | 3 {}\n",
             self.content
                 .iter()
                 .enumerate()
@@ -133,7 +133,7 @@ impl fmt::Debug for Board {
         let rows = ["a", "b", "c"];
         write!(
             f,
-            "  1 | 2 | 3 \n",
+            "  1 | 2 | 3 {}\n",
             self.content
                 .iter()
                 .enumerate()
