@@ -4,4 +4,12 @@ version = 3
 
 [[package]]
 name = "sudoku"
-version = "0.1.0"
+version = "0.1.1"
+dependencies = [
+ "trees",
+]
+
+[[package]]
+name = "trees"
+version = "0.1.7"
+source = "git+https://github.com/YvDem/rust_tree_impl#7b9c2e43dc90da4f5997deb9b77bd102afaf42f1"

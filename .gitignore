@@ -1,5 +1,4 @@
 /target
-/src/bin
 
 [credential]
 helper = store
