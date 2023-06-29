@@ -40,7 +40,7 @@ impl<T: PartialEq> Contains<T> for Vec<T> {
     }
 }
 
-trait Wcomb {
+pub trait Wcomb {
     fn wcomb(self, size: i32) -> Vec<Vec<i32>>;
 }
 
@@ -190,7 +190,7 @@ impl Board {
 
         for pos in pl_pos.iter() {
             for comb in pos.wcomb(9) {
-                if pl_pos.contains_elems(&comb) {
+                if pl_pos.contains_elems(&comb) && comb.len() == 3 {
                     return Some(player);
                 }
             }
@@ -201,6 +201,20 @@ impl Board {
         }
 
         None
+    }
+
+    pub fn show_wcomb(&self, player: Player) {
+        let pl_pos: Vec<i32> = self.positions(player);
+
+        if pl_pos.len() < 3 {
+            return;
+        }
+
+        for pos in pl_pos.iter() {
+            for comb in pos.wcomb(9) {
+                println!("wcomb: {:?}", comb);
+            }
+        }
     }
 
     pub fn empty_positions(&self) -> Vec<usize> {
@@ -313,8 +327,8 @@ pub fn prompt(message: &str) -> String {
     answer
 }
 
-pub fn create_all_possibilites_r(node: &mut Node<(Game, i32)>) {
-    if node.value().0.closed() {
+pub fn create_all_possibilites_r(node: &mut Node<(Game, i32, i32)>, depth: i32) {
+    if node.value().0.closed() || depth == 0 {
         return;
     }
 
@@ -322,13 +336,18 @@ pub fn create_all_possibilites_r(node: &mut Node<(Game, i32)>) {
         let mut sboard = node.value().0.clone();
         sboard.update_board(pos);
 
-        let mut snode = Node::init((sboard, 0));
-        create_all_possibilites_r(&mut snode);
+        let mut snode = Node::init((sboard, 0, pos as i32));
+        create_all_possibilites_r(&mut snode, depth - 1);
         node.add_snode(snode);
     }
 }
 
-pub fn minimax(node: &mut Node<(Game, i32)>, depth: i32, player: Player, maxplayer: bool) -> i32 {
+pub fn minimax(
+    node: &mut Node<(Game, i32, i32)>,
+    depth: i32,
+    player: Player,
+    maxplayer: bool,
+) -> i32 {
     if node.value().0.closed() || depth == 0 {
         match node.value().0.winner() {
             Player::Empty => return 0,
