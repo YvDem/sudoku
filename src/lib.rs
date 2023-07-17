@@ -1,5 +1,7 @@
 use std::{fmt, io};
-use trees::{Init, Node}; // trees is a self-made librarie with limited functionalities to create / add to tree-shaped data structures
+// trees is a self-made librarie with limited functionalities to create / add to tree-shaped data structures
+// you can find the repository in the cargo file
+use trees::{Init, Node}; 
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
@@ -26,12 +28,13 @@ impl Player {
     }
 }
 
+// simple and flawed trait to check if all the values of a given array are in the specified array.
 trait Contains<T> {
     fn contains_elems(&self, arr: &[T]) -> bool;
 }
 
 impl<T: PartialEq> Contains<T> for Vec<T> {
-    // ne doit etre utilisé que sur des types ne containant pas d'éléments en double
+    // the code falls apart if there are duplicate values in the array.
     fn contains_elems(&self, arr: &[T]) -> bool {
         let arr_size = arr.len();
         let count: Vec<&T> = arr.iter().filter(|e| self.contains(e)).collect();
@@ -40,6 +43,9 @@ impl<T: PartialEq> Contains<T> for Vec<T> {
     }
 }
 
+
+// This is my implementation to find all the combinaisons of elements giving victory based on the i32.
+// for example, for 1, it will give 0, 1, 2 and 1, 4, 7.
 pub trait Wcomb {
     fn wcomb(self, size: i32) -> Vec<Vec<i32>>;
 }
@@ -75,11 +81,14 @@ impl Wcomb for i32 {
     }
 }
 
+// The board is just a nested list
 #[derive(Clone)]
 pub struct Board {
     pub content: [Player; 9],
 }
 
+
+// The game is just a board, the current player, the winner and if the board is closed aka the game has ended
 #[derive(Clone)]
 pub struct Game {
     pub current_player: Player,
@@ -88,6 +97,7 @@ pub struct Game {
     pub closed: bool,
 }
 
+// we define the default value for the board
 impl Default for Board {
     fn default() -> Board {
         Board {
@@ -96,6 +106,7 @@ impl Default for Board {
     }
 }
 
+// same for the game
 impl Default for Game {
     fn default() -> Game {
         Game {
@@ -107,6 +118,7 @@ impl Default for Game {
     }
 }
 
+// Here is the code to diplay the board to the user.
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let rows = ["a", "b", "c"];
@@ -129,6 +141,7 @@ impl fmt::Display for Board {
     }
 }
 
+// This is needed to display an array of board for example
 impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let rows = ["a", "b", "c"];
@@ -151,12 +164,16 @@ impl fmt::Debug for Board {
     }
 }
 
+
+// display for the Player enum
 impl fmt::Display for Player {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.symbol())
     }
 }
 
+
+// display for the Game
 impl fmt::Display for Game {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -167,11 +184,13 @@ impl fmt::Display for Game {
     }
 }
 
+// board functions. A lot of those are just to return values of the element.
 impl Board {
     fn is_full(&self) -> bool {
         !self.content.contains(&Player::Empty)
     }
 
+    // give all the positions the specified player occupies.
     fn positions(&self, player: Player) -> Vec<i32> {
         self.content
             .iter()
@@ -181,6 +200,8 @@ impl Board {
             .collect()
     }
 
+
+    // If there is a winner, this function gives it, else, it gives None
     pub fn eval_winner(&self, player: Player) -> Option<Player> {
         let pl_pos: Vec<i32> = self.positions(player);
 
@@ -203,6 +224,7 @@ impl Board {
         None
     }
 
+    // This is a test function and should not be here
     pub fn show_wcomb(&self, player: Player) {
         let pl_pos: Vec<i32> = self.positions(player);
 
@@ -217,6 +239,8 @@ impl Board {
         }
     }
 
+    // Give the empty positions of the board. Same as the position function
+    // for the Player::Empty 
     pub fn empty_positions(&self) -> Vec<usize> {
         self.content
             .iter()
@@ -227,8 +251,8 @@ impl Board {
     }
 }
 
+// game functions. A lot of those are just to return values of the element.
 impl Game {
-    // Todo: impl tous les elements liées à Board dans le impl de board
     pub fn bcontent(&self) -> &Board {
         &self.board_content
     }
@@ -274,11 +298,13 @@ impl Game {
         }
     }
 
+
+    // the function to ask position to the current player.
     pub fn ask_position(&self) -> usize {
         let board_position: u32 = loop {
             let mut input = String::new();
 
-            println!("Donnez la position à laquelle vous voulez jouer! (ex: a1, b2 ..) :");
+            println!("Give the position where you want to play! (ex: a1, b2 ..) :");
 
             io::stdin()
                 .read_line(&mut input)
@@ -298,7 +324,7 @@ impl Game {
                 ('c', x @ Some('1' | '2' | '3')) => x.unwrap().to_digit(10).unwrap() + 6 - 1,
 
                 _ => {
-                    println!("Entrez une position valide!");
+                    println!("I need a valid position!");
                     continue;
                 }
             };
@@ -306,7 +332,7 @@ impl Game {
             if self.is_position_empty(int_position as usize) {
                 break int_position;
             } else {
-                println!("Entrez une position valide!");
+                println!("I need a valid position!");
                 continue;
             }
         };
@@ -315,6 +341,7 @@ impl Game {
     }
 }
 
+// to ask things
 pub fn prompt(message: &str) -> String {
     let mut answer = String::new();
 
@@ -327,6 +354,7 @@ pub fn prompt(message: &str) -> String {
     answer
 }
 
+// the function to create all the branches from a given Node.
 pub fn create_all_possibilites_r(node: &mut Node<(Game, i32, i32)>, depth: i32) {
     if node.value().0.closed() || depth == 0 {
         return;
@@ -342,6 +370,7 @@ pub fn create_all_possibilites_r(node: &mut Node<(Game, i32, i32)>, depth: i32) 
     }
 }
 
+// The minimax function. You can look it up on wikipedia.
 pub fn minimax(
     node: &mut Node<(Game, i32, i32)>,
     depth: i32,
@@ -376,6 +405,7 @@ pub fn minimax(
     }
 }
 
+// Give the score of the sub_nodes in vectors for an easier read.
 trait GetNodeScore {
     fn snodes_boards(&self) -> Vec<&Board>;
     fn snodes_scores(&self) -> Vec<i32>;
@@ -403,6 +433,8 @@ impl GetNodeScore for Node<(Game, i32)> {
     }
 }
 
+
+// Again, a debug function.
 pub fn show_possibilities(node: &Node<(Game, i32)>) {
     println!(
         "Current Node:\n{}\n Value: {}",
@@ -419,7 +451,7 @@ pub fn show_possibilities(node: &Node<(Game, i32)>) {
     let cmd: u32 = loop {
         let mut input = String::new();
 
-        println!("1..n -> choisir une nth node\n 0 -> affiche toutes les snodes");
+        println!("1..n -> choose an nth node\n 0 -> show all the sub-nodes");
 
         io::stdin()
             .read_line(&mut input)
