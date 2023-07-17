@@ -1,5 +1,5 @@
 use std::{fmt, io};
-use trees::{Init, Node};
+use trees::{Init, Node}; // trees is a self-made librarie with limited functionalities to create / add to tree-shaped data structures
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
