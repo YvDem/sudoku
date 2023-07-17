@@ -4,7 +4,7 @@ use trees::{Init, Node};
 
 fn main() {
     loop {
-        match prompt("-> `p` pour jouer contre un autre joueur\n-> `ai` pour jouer contre l'ai\n-> `q` pour quitter: ").trim()
+        match prompt("-> `p` to play against another player\n-> `ai` to play against an ai\n-> `q` to quit: ").trim()
         {
             "p" => play_1v1(),
             "ai" => play_ia(),
@@ -18,7 +18,7 @@ fn play_1v1() {
     let mut board = Game::default();
     loop {
         let current_player = board.current_player.symbol();
-        println!("C'est au tour de {} de jouer!", current_player);
+        println!("It's time for {} to play!", current_player);
 
         println!("{}", board.bcontent());
 
@@ -29,9 +29,9 @@ fn play_1v1() {
             println!("{}", board.bcontent());
 
             match board.winner() {
-                Player::Empty => println!("Match nul !"),
-                Player::O => println!("O à gagné !"),
-                Player::X => println!("X à gagné !"),
+                Player::Empty => println!("Draw !"),
+                Player::O => println!("O won !"),
+                Player::X => println!("X won !"),
             }
             break;
         }
@@ -42,11 +42,11 @@ fn play_ia() {
     let mut board = Game::default();
 
     let player = loop {
-        let answer = match prompt("Voulez-vous commencer ? (y/n)").trim() {
+        let answer = match prompt("Do you want to start ? (y/n)").trim() {
             "y" => Player::X,
             "n" => Player::O,
             _ => {
-                println!("Entrez une valeure valide!");
+                println!("Enter a valid option!");
                 continue;
             }
         };
@@ -55,13 +55,13 @@ fn play_ia() {
     };
 
     let level: u32 = loop {
-        let level = match prompt("-> Choissisez la difficultée: (1..4)")
+        let level = match prompt("-> Choose difficulty: (1..4)")
             .trim()
             .parse()
         {
             Ok(num @ 1..=5) => num * 3,
             _ => {
-                println!("Entrez une valeure valide!");
+                println!("Enter a valid number!");
                 continue;
             }
         };
@@ -73,7 +73,7 @@ fn play_ia() {
 
     loop {
         let current_player = board.current_player.symbol();
-        println!("C'est au tour de {} de jouer!", current_player);
+        println!("It's time for {} to play!", current_player);
         println!("{}", board.bcontent());
 
         if board.c_player() == ai {
@@ -82,7 +82,7 @@ fn play_ia() {
             let b_move_val = minimax(&mut b_tree, level as i32, ai, true);
             for snode in b_tree.snodes() {
                 if snode.value().1 == b_move_val {
-                    board = snode.value.0.clone()
+                    board = snode.value.0.clone()  // yes, here we are replacing the current board with a board stored in the tree with the ia chosen move.
                 }
             }
         } else {
@@ -94,9 +94,9 @@ fn play_ia() {
             println!("{}", board.bcontent());
 
             match board.winner() {
-                Player::Empty => println!("Match nul !"),
-                Player::O => println!("O à gagné !"),
-                Player::X => println!("X à gagné !"),
+                Player::Empty => println!("Draw !"),
+                Player::O => println!("O won !"),
+                Player::X => println!("X won !"),
             }
             break;
         }
